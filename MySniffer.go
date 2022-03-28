@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
+	"fyne.io/fyne/v2/data/binding"
 	"github.com/google/gopacket/pcap"
 	"log"
 	"net"
 )
 
-var INTERFACENAME = "Please choice an interface!"
+var INTERFACENAME = binding.NewString()
 
 type Interface struct {
 	Name        string //设备名称
@@ -26,6 +27,7 @@ type InterfaceAddress struct {
 }
 
 var allInterfaceInfo = make(map[string]Interface)
+var BPFString string
 
 func getInterfaceList() []string {
 	var interfaceList []string
@@ -61,10 +63,11 @@ func getInterfaceDetails(interfaceName string) string {
 }
 
 func setINTERFACENAME(name string) {
-	INTERFACENAME = name
+	INTERFACENAME.Set(name)
 	fmt.Println("set interface is " + name)
 }
 
-func getINTERFACENAME() string {
-	return INTERFACENAME
+func setBPFString(str string) {
+	BPFString = str
+	fmt.Println("set BPFString is " + str)
 }

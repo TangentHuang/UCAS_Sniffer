@@ -5,27 +5,56 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
-	"time"
 )
 
+func Init() {
+	INTERFACENAME.Set("Please Choice  an Interface!")
+}
+
 func main() {
+	Init()
 	myApp := app.NewWithID("UCAS")
 	myWin := myApp.NewWindow("UCAS")
 
-	interfaceCard := widget.NewLabel(getINTERFACENAME())
-
+	interfaceCard := widget.NewLabelWithData(INTERFACENAME)
+	toolbar := makeToolBar(myApp, myWin)
+	BPFentry := makeBPFEntry(myApp, myWin)
+	BPFbotton := widget.NewButton("Submit", func() {
+		setBPFString(BPFentry.Text)
+	})
 	myWin.SetMainMenu(makeMenu(myApp, myWin))
-	myWin.SetContent(interfaceCard)
-	go func() {
-		for range time.Tick(time.Second) {
-			interfaceCard.SetText(getINTERFACENAME())
-			fmt.Println(getINTERFACENAME())
-		}
-	}()
-	myWin.Resize(fyne.NewSize(640*2, 640))
 
+	toolsContent := container.New(layout.NewGridLayout(2), container.NewHBox(toolbar, widget.NewLabel("Interface:"), interfaceCard), container.New(layout.NewFormLayout(), widget.NewSeparator(), container.New(layout.NewFormLayout(), BPFbotton, BPFentry)))
+
+	myWin.SetContent(container.NewVBox(toolsContent, widget.NewSeparator()))
+
+	myWin.Resize(fyne.NewSize(640*2, 640))
+	myWin.SetMaster()
 	myWin.ShowAndRun()
+}
+
+func makeBPFEntry(a fyne.App, w fyne.Window) *widget.Entry {
+	BPFEntry := widget.NewEntry()
+	BPFEntry.SetPlaceHolder("Please input BPF string")
+
+	return BPFEntry
+
+}
+
+func makeToolBar(a fyne.App, w fyne.Window) *widget.Toolbar {
+	startCapture := widget.NewToolbarAction(theme.MediaPlayIcon(), func() {
+		//!todo 添加开始抓包的逻辑
+		fmt.Println("start capture")
+	})
+	stopCapture := widget.NewToolbarAction(theme.MediaPauseIcon(), func() {
+		//!todo 添加停止抓包的逻辑
+		fmt.Println("stop capture")
+	})
+	toolbar := widget.NewToolbar(startCapture, stopCapture, widget.NewToolbarSeparator())
+	return toolbar
 }
 
 func makeInterfaceWin(a fyne.App, w fyne.Window) fyne.Window {
