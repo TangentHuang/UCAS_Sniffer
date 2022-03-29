@@ -47,10 +47,12 @@ func makeBPFEntry(a fyne.App, w fyne.Window) *widget.Entry {
 func makeToolBar(a fyne.App, w fyne.Window) *widget.Toolbar {
 	startCapture := widget.NewToolbarAction(theme.MediaPlayIcon(), func() {
 		//!todo 添加开始抓包的逻辑
+		go startCapture(a,w)
 		fmt.Println("start capture")
 	})
 	stopCapture := widget.NewToolbarAction(theme.MediaPauseIcon(), func() {
 		//!todo 添加停止抓包的逻辑
+		stopCapture()
 		fmt.Println("stop capture")
 	})
 	toolbar := widget.NewToolbar(startCapture, stopCapture, widget.NewToolbarSeparator())
