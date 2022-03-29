@@ -27,9 +27,9 @@ func main() {
 	})
 	myWin.SetMainMenu(makeMenu(myApp, myWin))
 
-	toolsContent := container.New(layout.NewGridLayout(2), container.NewHBox(toolbar, widget.NewLabel("Interface:"), interfaceCard), container.New(layout.NewFormLayout(), widget.NewSeparator(), container.New(layout.NewFormLayout(), BPFbotton, BPFentry)))
-
-	myWin.SetContent(container.NewVBox(toolsContent, widget.NewSeparator()))
+	toolsContent := container.New(layout.NewGridLayout(2), container.NewHBox(toolbar, widget.NewLabel("Interface:"), interfaceCard), container.New(layout.NewFormLayout(), widget.NewSeparator(), container.NewBorder(nil, nil, nil, BPFbotton, BPFentry)))
+	mainContent := makeMainContent()
+	myWin.SetContent(container.NewBorder(container.NewVBox(toolsContent, widget.NewSeparator()), nil, nil, nil, mainContent))
 
 	myWin.Resize(fyne.NewSize(640*2, 640))
 	myWin.SetMaster()
