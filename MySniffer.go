@@ -9,6 +9,7 @@ import (
 )
 
 var INTERFACENAME = binding.NewString()
+var PcapFilePath = binding.NewString()
 
 type Interface struct {
 	Name        string //设备名称

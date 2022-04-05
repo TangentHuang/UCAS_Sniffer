@@ -1,23 +1,32 @@
 package main
 
 import (
-	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/data/binding"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/storage"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	"github.com/google/gopacket/layers"
+	"github.com/google/gopacket/pcapgo"
+	"log"
+	"os"
 )
 
-func Init() {
+func Init(a fyne.App, w fyne.Window) {
 	INTERFACENAME.Set("Please Choice  an Interface!")
+	PcapFilePath.AddListener(binding.NewDataListener(func() {
+		parsePcapFile(a, w)
+	}))
 }
 
 func main() {
-	Init()
 	myApp := app.NewWithID("UCAS")
 	myWin := myApp.NewWindow("UCAS")
+	Init(myApp, myWin)
 
 	interfaceCard := widget.NewLabelWithData(INTERFACENAME)
 	toolbar := makeToolBar(myApp, myWin)
@@ -47,13 +56,18 @@ func makeBPFEntry(a fyne.App, w fyne.Window) *widget.Entry {
 func makeToolBar(a fyne.App, w fyne.Window) *widget.Toolbar {
 	startCapture := widget.NewToolbarAction(theme.MediaPlayIcon(), func() {
 		//!todo 添加开始抓包的逻辑
-		go startCapture(a,w)
-		fmt.Println("start capture")
+		filename, _ := PcapFilePath.Get()
+		if filename != "" {
+			netPacketList = netPacketList[0:0]
+			netPacketLen = 0
+		}
+		go startCapture(a, w)
+		log.Println("start capture")
 	})
 	stopCapture := widget.NewToolbarAction(theme.MediaPauseIcon(), func() {
 		//!todo 添加停止抓包的逻辑
 		stopCapture()
-		fmt.Println("stop capture")
+		log.Println("stop capture")
 	})
 	toolbar := widget.NewToolbar(startCapture, stopCapture, widget.NewToolbarSeparator())
 	return toolbar
@@ -99,10 +113,55 @@ func makeInterfaceWin(a fyne.App, w fyne.Window) fyne.Window {
 func makeMenu(a fyne.App, w fyne.Window) *fyne.MainMenu {
 	//主界面头部菜单
 	// 定义file菜单，包含了open，save，save as，Quit
-	fileOpenItem := fyne.NewMenuItem("Open", nil)
-	fileSaveItem := fyne.NewMenuItem("Save", nil)
-	fileSaveAsItem := fyne.NewMenuItem("Save AS", nil)
-	fileMenu := fyne.NewMenu("File", fileOpenItem, fileSaveItem, fileSaveAsItem)
+	fileOpenItem := fyne.NewMenuItem("Open", func() {
+		fd := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
+			if err != nil {
+				dialog.ShowError(err, w)
+				return
+			}
+			if reader == nil {
+				log.Println("??")
+				return
+			}
+			PcapFilePath.Set(reader.URI().String()[7:])
+			log.Println(PcapFilePath.Get())
+		}, w)
+		luri, _ := storage.ListerForURI(storage.NewFileURI("."))
+		fd.SetFilter(storage.NewExtensionFileFilter([]string{".pcap"}))
+		fd.SetLocation(luri)
+		fd.Resize(fyne.NewSize(640, 640))
+		fd.Show()
+	})
+	//保存功能
+	fileSaveItem := fyne.NewMenuItem("Save", func() {
+		saveFd := dialog.NewFileSave(func(writer fyne.URIWriteCloser, err error) {
+			if err != nil {
+				dialog.ShowError(err, w)
+				return
+			}
+			if writer == nil {
+				log.Println("??")
+				return
+			}
+			filename := writer.URI().String()[7:]
+			log.Println("save as" + filename)
+			f, err1 := os.Create(filename)
+			if err1 != nil {
+				dialog.ShowError(err1, w)
+				return
+			}
+			w := pcapgo.NewWriter(f)
+			w.WriteFileHeader(1024, layers.LinkTypeEthernet)
+			for _, netpacket := range netPacketList {
+				packet := netpacket.packet
+				w.WritePacket(packet.Metadata().CaptureInfo, packet.Data())
+			}
+		}, w)
+		saveFd.SetFilter(storage.NewExtensionFileFilter([]string{".pcap"}))
+		saveFd.Resize(fyne.NewSize(640, 640))
+		saveFd.Show()
+	})
+	fileMenu := fyne.NewMenu("File", fileOpenItem, fileSaveItem)
 
 	// 定义edit菜单，包含Copy，Paste，Cut
 	editCopyItem := fyne.NewMenuItem("Copy", nil)
