@@ -21,6 +21,12 @@ func Init(a fyne.App, w fyne.Window) {
 	PcapFilePath.AddListener(binding.NewDataListener(func() {
 		parsePcapFile(a, w)
 	}))
+	BPFString.AddListener(binding.NewDataListener(func() {
+		if str, _ := BPFString.Get(); str == "" {
+			return
+		}
+		captureWithBPF(a, w)
+	}))
 }
 
 func main() {
@@ -60,6 +66,7 @@ func makeToolBar(a fyne.App, w fyne.Window) *widget.Toolbar {
 		if filename != "" {
 			netPacketList = netPacketList[0:0]
 			netPacketLen = 0
+			PcapFilePath.Set("")
 		}
 		go startCapture(a, w)
 		log.Println("start capture")

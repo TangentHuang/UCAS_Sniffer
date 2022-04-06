@@ -15,6 +15,53 @@ var netPacketList []netPacket
 
 var handle *pcap.Handle
 
+func captureWithBPF(a fyne.App, w fyne.Window) {
+	filename, _ := PcapFilePath.Get()
+	BPFstr, _ := BPFString.Get()
+	if filename == "" {
+		if handle != nil {
+			handle.Close()
+		}
+		netPacketList = netPacketList[0:0]
+		netPacketLen = 0
+		name, _ := INTERFACENAME.Get()
+		var err error
+		handle, err = pcap.OpenLive(name, 1600, true, time.Second)
+		handle.SetBPFFilter(BPFstr)
+		if err != nil {
+			dialog.ShowError(err, w)
+			return
+		}
+		packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
+		for packet := range packetSource.Packets() {
+			//fmt.Println(packet.Dump())
+			analysisPacket(packet)
+		}
+	} else {
+		if handle != nil {
+			handle.Close()
+		}
+		netPacketList = netPacketList[0:0]
+		netPacketLen = 0
+		filePath, _ := PcapFilePath.Get()
+		log.Println(filePath)
+		var err error
+		handle, err = pcap.OpenOffline(filePath)
+		handle.SetBPFFilter(BPFstr)
+		if err != nil {
+			//dialog.ShowError(err, w)
+			return
+		}
+		netPacketList = netPacketList[0:0]
+		netPacketLen = 0
+		packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
+		for packet := range packetSource.Packets() {
+			//fmt.Println(packet.Dump())
+			analysisPacket(packet)
+		}
+	}
+}
+
 func parsePcapFile(a fyne.App, w fyne.Window) {
 	filePath, _ := PcapFilePath.Get()
 	log.Println(filePath)
@@ -28,7 +75,7 @@ func parsePcapFile(a fyne.App, w fyne.Window) {
 	netPacketLen = 0
 	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 	for packet := range packetSource.Packets() {
-		fmt.Println(packet.Dump())
+		//fmt.Println(packet.Dump())
 		analysisPacket(packet)
 	}
 }
@@ -64,8 +111,10 @@ func analysisPacket(packet gopacket.Packet) {
 		onePacket.Protocol = ip.Protocol.String()
 		onePacket.Length = len(packet.Data())
 		onePacket.packet = packet
-		netPacketLen += 1
-		netPacketList = append(netPacketList, onePacket)
+		defer func() {
+			netPacketLen += 1
+			netPacketList = append(netPacketList, onePacket)
+		}()
 	}
 	//解析tcp
 	tcpLayer := packet.Layer(layers.LayerTypeTCP)

@@ -2,7 +2,10 @@ module awesomeProject1
 
 go 1.17
 
-require fyne.io/fyne/v2 v2.1.4
+require (
+	fyne.io/fyne/v2 v2.1.4
+	github.com/google/gopacket v1.1.19
+)
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -12,7 +15,6 @@ require (
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20211024062804-40e447a793be // indirect
 	github.com/godbus/dbus/v5 v5.0.4 // indirect
 	github.com/goki/freetype v0.0.0-20181231101311-fa8a33aabaff // indirect
-	github.com/google/gopacket v1.1.19 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/srwiley/oksvg v0.0.0-20200311192757-870daf9aa564 // indirect
 	github.com/srwiley/rasterx v0.0.0-20200120212402-85cb7272f5e9 // indirect

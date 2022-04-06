@@ -10,6 +10,7 @@ import (
 
 var INTERFACENAME = binding.NewString()
 var PcapFilePath = binding.NewString()
+var BPFString = binding.NewString()
 
 type Interface struct {
 	Name        string //设备名称
@@ -28,7 +29,6 @@ type InterfaceAddress struct {
 }
 
 var allInterfaceInfo = make(map[string]Interface)
-var BPFString string
 
 func getInterfaceList() []string {
 	var interfaceList []string
@@ -65,10 +65,10 @@ func getInterfaceDetails(interfaceName string) string {
 
 func setINTERFACENAME(name string) {
 	INTERFACENAME.Set(name)
-	fmt.Println("set interface is " + name)
+	log.Println("set interface is " + name)
 }
 
 func setBPFString(str string) {
-	BPFString = str
-	fmt.Println("set BPFString is " + str)
+	BPFString.Set(str)
+	log.Println("set BPFString is " + str)
 }
